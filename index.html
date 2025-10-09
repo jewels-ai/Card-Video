@@ -7,11 +7,27 @@
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
   <style>
-    body {
+    html, body {
       margin: 0;
-      font-family: 'Poppins', sans-serif;
-      background: #000;
+      padding: 0;
       overflow: hidden;
+      height: 100%;
+      width: 100%;
+      background: transparent !important;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    canvas, .a-canvas, .a-canvas canvas {
+      background: transparent !important;
+    }
+
+    a-scene {
+      position: fixed !important;
+      top: 0;
+      left: 0;
+      width: 100vw !important;
+      height: 100vh !important;
+      background: transparent !important;
     }
 
     #logo {
@@ -22,9 +38,10 @@
       z-index: 100;
     }
 
+    /* Play/Pause Button */
     .button-panel {
       position: absolute;
-      bottom: 20px;
+      bottom: 90px;
       left: 50%;
       transform: translateX(-50%);
       display: none;
@@ -48,6 +65,35 @@
       background-color: #7a17b8;
     }
 
+    /* Bottom Nav Buttons */
+    .bottom-nav {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: none;
+      justify-content: center;
+      gap: 15px;
+      z-index: 101;
+    }
+
+    .bottom-btn {
+      padding: 12px 18px;
+      font-size: 14px;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      background-color: #333;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.3s;
+      min-width: 130px;
+    }
+
+    .bottom-btn:hover {
+      background-color: #5E0F8B;
+    }
+
     .a-enter-vr-button {
       display: none !important;
     }
@@ -58,9 +104,16 @@
   <!-- Logo -->
   <img src="logo1.png" id="logo" alt="Logo">
 
-  <!-- Play/Pause Button -->
+  <!-- Play/Pause Button (shows when target is found) -->
   <div class="button-panel" id="planButtons">
     <button class="plan-button" id="toggleButton">▶️ Play Video</button>
+  </div>
+
+  <!-- ✅ Bottom Navigation Buttons (also only when target found) -->
+  <div class="bottom-nav" id="bottomNav">
+    <button class="bottom-btn" onclick="window.location.href='https://jewels-ai.github.io/Jewel-AI-Try-now/'">Try Jewellery</button>
+    <button class="bottom-btn" onclick="window.location.href='https://jewels-ai.github.io/savings-plan-demo/'">Saving Plan</button>
+    <button class="bottom-btn" onclick="window.location.href='https://www.jewels-ai.com/'">Website</button>
   </div>
 
   <!-- AR Scene -->
@@ -94,23 +147,26 @@
     const buttonsContainer = document.querySelector('#planButtons');
     const toggleButton = document.querySelector('#toggleButton');
     const target = document.querySelector('#target1');
+    const bottomNav = document.querySelector('#bottomNav');
 
     let isPlaying = false;
 
-    // Show button when target is found
+    // ✅ Show buttons only when target is found
     target.addEventListener('targetFound', () => {
       buttonsContainer.style.display = 'block';
+      bottomNav.style.display = 'flex';
     });
 
-    // Hide button & pause video when target is lost
+    // ✅ Hide buttons when target is lost
     target.addEventListener('targetLost', () => {
       buttonsContainer.style.display = 'none';
+      bottomNav.style.display = 'none';
       videoEl.pause();
       isPlaying = false;
       toggleButton.textContent = "▶️ Play Video";
     });
 
-    // Toggle play/pause on button click
+    // 🎥 Toggle play/pause on button click
     toggleButton.addEventListener('click', () => {
       if (!isPlaying) {
         videoDisplay.setAttribute('material', 'src', '#plan1Video');
@@ -124,14 +180,8 @@
       }
     });
 
-    /* ------------------------------------
-       🔒 Disable Right-Click & Dev Tools
-    ------------------------------------ */
-
-    // Disable right-click menu
+    /* 🚫 Disable Right-click & Dev Tools */
     document.addEventListener("contextmenu", (e) => e.preventDefault());
-
-    // Disable common DevTools shortcuts
     document.addEventListener("keydown", (e) => {
       if (
         e.key === "F12" ||
@@ -143,7 +193,7 @@
       }
     });
 
-    // Optional: Detect if DevTools are opened
+    // Optional DevTools detector
     (function devToolsDetector() {
       const threshold = 160;
       setInterval(() => {

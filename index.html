@@ -7,29 +7,11 @@
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
   <style>
-    html, body {
+    body {
       margin: 0;
-      padding: 0;
-      overflow: hidden;
-      height: 100%;
-      width: 100%;
-      background: transparent !important;
       font-family: 'Poppins', sans-serif;
+      background: #000;
     }
-
-    canvas, .a-canvas, .a-canvas canvas {
-      background: transparent !important;
-    }
-
-    a-scene {
-      position: fixed !important;
-      top: 0;
-      left: 0;
-      width: 100vw !important;
-      height: 100vh !important;
-      background: transparent !important;
-    }
-
     #logo {
       position: absolute;
       top: 16px;
@@ -37,17 +19,14 @@
       width: 100px;
       z-index: 100;
     }
-
-    /* Play/Pause Button */
     .button-panel {
       position: absolute;
-      bottom: 90px;
+      bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
       display: none;
       z-index: 100;
     }
-
     .plan-button {
       padding: 12px 24px;
       font-size: 15px;
@@ -60,60 +39,65 @@
       min-width: 160px;
       transition: background 0.3s;
     }
-
     .plan-button:hover {
       background-color: #7a17b8;
     }
-
-    /* Bottom Nav Buttons */
-    .bottom-nav {
-      position: absolute;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: none;
-      justify-content: center;
-      gap: 15px;
-      z-index: 101;
-    }
-
-    .bottom-btn {
-      padding: 12px 18px;
-      font-size: 14px;
-      font-weight: bold;
-      border: none;
-      border-radius: 8px;
-      background-color: #333;
-      color: #fff;
-      cursor: pointer;
-      transition: background 0.3s;
-      min-width: 130px;
-    }
-
-    .bottom-btn:hover {
-      background-color: #5E0F8B;
-    }
-
     .a-enter-vr-button {
       display: none !important;
+    }
+    /* Popup form */
+    #formOverlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.85);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+      text-align: center;
+    }
+    #formOverlay input {
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: none;
+      width: 250px;
+      margin-top: 12px;
+    }
+    #formOverlay button {
+      margin-top: 16px;
+      padding: 10px 20px;
+      border: none;
+      background: #ffb400;
+      color: #000;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    #formOverlay button:hover {
+      background: #ffd35a;
     }
   </style>
 </head>
 <body>
 
   <!-- Logo -->
-  <img src="logo1.png" id="logo" alt="Logo">
+  <img src="logo.png" id="logo" alt="Logo">
 
-  <!-- Play/Pause Button (shows when target is found) -->
-  <div class="button-panel" id="planButtons">
-    <button class="plan-button" id="toggleButton">▶️ Play Video</button>
+  <!-- Form Popup -->
+  <div id="formOverlay" style="display: none;">
+    <h2>Welcome to Our AR Jewellery Experience ✨</h2>
+    <p>Please enter your mobile number to continue:</p>
+    <input type="tel" id="mobileInput" placeholder="Enter Mobile Number" maxlength="10" />
+    <button id="submitMobile">Submit & Continue</button>
   </div>
 
-  <!-- ✅ Bottom Navigation Buttons (also only when target found) -->
-  <div class="bottom-nav" id="bottomNav">
-    <button class="bottom-btn" onclick="window.location.href='https://jewels-ai.github.io/Jewel-AI-Try-now/'">Try Jewellery</button>
-    <button class="bottom-btn" onclick="window.location.href='https://jewels-ai.github.io/savings-plan-demo/'">Saving Plan</button>
-    <button class="bottom-btn" onclick="window.location.href='https://www.jewels-ai.com/'">Website</button>
+  <!-- Play/Pause Button -->
+  <div class="button-panel" id="planButtons">
+    <button class="plan-button" id="toggleButton">▶️ Play Video</button>
   </div>
 
   <!-- AR Scene -->
@@ -125,7 +109,7 @@
     device-orientation-permission-ui="enabled: false">
 
     <a-assets>
-      <video id="plan1Video" src="output.mp4" playsinline preload="auto" loop></video>
+      <video id="plan1Video" src="plan1.mp4" playsinline preload="auto" loop></video>
     </a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
@@ -136,7 +120,7 @@
         position="0 0 0" 
         width="1" 
         height="0.56" 
-        material="shader: flat; src: intro-card.png">
+        material="shader: flat">
       </a-plane>
     </a-entity>
   </a-scene>
@@ -147,26 +131,70 @@
     const buttonsContainer = document.querySelector('#planButtons');
     const toggleButton = document.querySelector('#toggleButton');
     const target = document.querySelector('#target1');
-    const bottomNav = document.querySelector('#bottomNav');
+
+    const formOverlay = document.getElementById('formOverlay');
+    const submitMobile = document.getElementById('submitMobile');
+    const mobileInput = document.getElementById('mobileInput');
 
     let isPlaying = false;
 
-    // ✅ Show buttons only when target is found
-    target.addEventListener('targetFound', () => {
-      buttonsContainer.style.display = 'block';
-      bottomNav.style.display = 'flex';
+    // The URL of your Google Apps Script Web App
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwofgGjIprynyn6bRy3S1szdZltdMO65p3f7ZzLlsAbSCtmQMM6OvlIKIOmE_iRXJ0vMA/exec";
+
+    // Helper: send mobile to server
+    async function sendMobile(mobile) {
+      try {
+        await fetch(WEB_APP_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ mobile })
+        });
+      } catch (err) {
+        console.warn("Could not send mobile:", err);
+      }
+    }
+
+    // Check if mobile already stored
+    const existingMobile = localStorage.getItem("user_mobile");
+    if (existingMobile && existingMobile.length === 10) {
+      // Already have mobile → send in background, then hide form
+      formOverlay.style.display = "none";
+      // Optional: send again (to catch missed ones)
+      sendMobile(existingMobile);
+    } else {
+      // Show form to ask for mobile
+      formOverlay.style.display = "flex";
+    }
+
+    submitMobile.addEventListener('click', () => {
+      const mobile = mobileInput.value.trim();
+      if (!/^[6-9]\d{9}$/.test(mobile)) {
+        alert("Please enter a valid 10-digit mobile number.");
+        return;
+      }
+      // Save locally
+      localStorage.setItem("user_mobile", mobile);
+      // Send to Google Sheet
+      sendMobile(mobile);
+      // Hide form
+      formOverlay.style.display = "none";
     });
 
-    // ✅ Hide buttons when target is lost
+    // Show button when target is found
+    target.addEventListener('targetFound', () => {
+      buttonsContainer.style.display = 'block';
+    });
+
+    // Hide button & pause video when target is lost
     target.addEventListener('targetLost', () => {
       buttonsContainer.style.display = 'none';
-      bottomNav.style.display = 'none';
       videoEl.pause();
       isPlaying = false;
       toggleButton.textContent = "▶️ Play Video";
     });
 
-    // 🎥 Toggle play/pause on button click
+    // Toggle play/pause
     toggleButton.addEventListener('click', () => {
       if (!isPlaying) {
         videoDisplay.setAttribute('material', 'src', '#plan1Video');
@@ -180,30 +208,18 @@
       }
     });
 
-    /* 🚫 Disable Right-click & Dev Tools */
+    /* Disable right-click + dev tools */
     document.addEventListener("contextmenu", (e) => e.preventDefault());
     document.addEventListener("keydown", (e) => {
       if (
         e.key === "F12" ||
-        (e.ctrlKey && e.shiftKey && ["I", "J", "C"].includes(e.key.toUpperCase())) ||
-        (e.ctrlKey && e.key.toUpperCase() === "U")
+        (e.ctrlKey && e.shiftKey && ["I", "J", "C"].includes(e.key)) ||
+        (e.ctrlKey && e.key === "u")
       ) {
         e.preventDefault();
-        alert("🚫 Developer Tools are disabled on this page.");
+        alert("🚫 Action Disabled!");
       }
     });
-
-    // Optional DevTools detector
-    (function devToolsDetector() {
-      const threshold = 160;
-      setInterval(() => {
-        const widthThreshold = window.outerWidth - window.innerWidth > threshold;
-        const heightThreshold = window.outerHeight - window.innerHeight > threshold;
-        if (widthThreshold || heightThreshold) {
-          document.body.innerHTML = "<h1 style='color:red;text-align:center;margin-top:40vh;'>🚫 Developer Tools Detected!</h1>";
-        }
-      }, 1000);
-    })();
   </script>
 </body>
 </html>

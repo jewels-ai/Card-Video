@@ -11,6 +11,7 @@
       margin: 0;
       font-family: 'Poppins', sans-serif;
       background: #000;
+      overflow: hidden;
     }
 
     #logo {
@@ -55,7 +56,7 @@
 <body>
 
   <!-- Logo -->
-  <img src="logo.png" id="logo" alt="Logo">
+  <img src="logo1.png" id="logo" alt="Logo">
 
   <!-- Play/Pause Button -->
   <div class="button-panel" id="planButtons">
@@ -123,22 +124,36 @@
       }
     });
 
-    /* 🚫 Disable Right-click */
+    /* ------------------------------------
+       🔒 Disable Right-Click & Dev Tools
+    ------------------------------------ */
+
+    // Disable right-click menu
     document.addEventListener("contextmenu", (e) => e.preventDefault());
 
-    /* 🚫 Disable Inspect Element & Common Dev Shortcuts */
+    // Disable common DevTools shortcuts
     document.addEventListener("keydown", (e) => {
       if (
-        e.key === "F12" || 
-        (e.ctrlKey && e.shiftKey && e.key === "I") || 
-        (e.ctrlKey && e.shiftKey && e.key === "J") || 
-        (e.ctrlKey && e.key === "u") || 
-        (e.ctrlKey && e.shiftKey && e.key === "C")
+        e.key === "F12" ||
+        (e.ctrlKey && e.shiftKey && ["I", "J", "C"].includes(e.key.toUpperCase())) ||
+        (e.ctrlKey && e.key.toUpperCase() === "U")
       ) {
         e.preventDefault();
-        alert("🚫 Action Disabled!");
+        alert("🚫 Developer Tools are disabled on this page.");
       }
     });
+
+    // Optional: Detect if DevTools are opened
+    (function devToolsDetector() {
+      const threshold = 160;
+      setInterval(() => {
+        const widthThreshold = window.outerWidth - window.innerWidth > threshold;
+        const heightThreshold = window.outerHeight - window.innerHeight > threshold;
+        if (widthThreshold || heightThreshold) {
+          document.body.innerHTML = "<h1 style='color:red;text-align:center;margin-top:40vh;'>🚫 Developer Tools Detected!</h1>";
+        }
+      }, 1000);
+    })();
   </script>
 </body>
 </html>
